@@ -69,14 +69,14 @@ jobs:
 
       - name: kill java app
         run:
-          PIDS=$(pgrep -f user-service-0.0.1-SNAPSHOT.jar) || true
+          PIDS=$(pgrep -f user-service-0.0.1-SNAPSHOT.jar)
 
-          if [ ! -z "$PIDS" ]; then
-            echo "Java server is running. Shutting it down..."
-            sudo /usr/bin/kill -9 $PIDS
-          else
-            echo "Java server is not running."
-          fi
+#          if [ ! -z "$PIDS" ]; then
+#            echo "Java server is running. Shutting it down..."
+#            sudo /usr/bin/kill -9 $PIDS
+#          else
+#            echo "Java server is not running."
+#          fi
 
       # ----------------------------------------
       # 8. SSH into the EC2 instance and deploy the app:
