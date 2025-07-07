@@ -76,7 +76,7 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 '
-            set -ex
+            set -x
             aws s3 cp s3://my-camping-bucket/user-service-0.0.1-SNAPSHOT.jar /home/ec2-user/user-service-0.0.1-SNAPSHOT.jar
 
             if pgrep -f user-service-0.0.1-SNAPSHOT.jar > /dev/null; then

@@ -8,6 +8,6 @@ public class ProductController {
     @GetMapping("/test")
     public String getProduct() {
         System.out.println("getProduct");
-        return "FUCK YOU Terry!!!!!!";
+        return "FUCK YOU Terry!!!";
     }
 }
