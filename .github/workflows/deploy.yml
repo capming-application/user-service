@@ -82,10 +82,10 @@ jobs:
             PIDS=$(pgrep -f user-service-0.0.1-SNAPSHOT.jar) || true
             
             if [ ! -z "$PIDS" ]; then
-            echo "Java server is running. Shutting it down..."
-            kill $PIDS || true
+              echo "Java server is running. Shutting it down..."
+              sudo kill $PIDS || true
             else
-            echo "Java server is not running."
+              echo "Java server is not running."
             fi
           
             nohup java -jar /home/ec2-user/user-service-0.0.1-SNAPSHOT.jar > /home/ec2-user/output.log 2>&1 &
