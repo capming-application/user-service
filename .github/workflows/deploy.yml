@@ -67,9 +67,16 @@ jobs:
           chmod 600 key.pem    # Restrict permissions for security
 
       # ----------------------------------------
+      # 9. Check application log
+      # ----------------------------------------
+      - name: Check application log
+        run: ps aux | grep java
+
+      # ----------------------------------------
       # 8. SSH into the EC2 instance and deploy the app:
       #    - download the JAR from S3
       #    - stop any running app process
+      #    - Check if app.pid exists
       #    - start the new app version in background
       # ----------------------------------------
       - name: Deploy to EC2
@@ -77,8 +84,28 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 '
             set -ex
             aws s3 cp s3://my-camping-bucket/user-service-0.0.1-SNAPSHOT.jar /home/ec2-user/user-service-0.0.1-SNAPSHOT.jar
+          
+            # Check if app.pid exists
+            if [ -f /home/ec2-user/app.pid ]; then
+            echo "Java server is running. Shutting it down..."
+            kill $(cat /home/ec2-user/app.pid) || true
+            rm -f /home/ec2-user/app.pid
+            else
+            echo "Java server is not running."
+            fi
+          
             nohup java -jar /home/ec2-user/user-service-0.0.1-SNAPSHOT.jar > /home/ec2-user/output.log 2>&1 &
           '
+
+      - name: Check java server
+        run: tail -f /home/ec2-user/output.log
+
+
+      # ----------------------------------------
+      # 9. Check application log
+      # ----------------------------------------
+      - name: Check application log
+        run: ps aux | grep java
 
       # ----------------------------------------
       # 9. Delete the SSH key file after deployment
