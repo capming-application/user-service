@@ -83,7 +83,7 @@ jobs:
             
             if [ ! -z "$PIDS" ]; then
               echo "Java server is running. Shutting it down..."
-              sudo kill $PIDS || true
+              sudo /usr/bin/kill $PIDS || true
             else
               echo "Java server is not running."
             fi
