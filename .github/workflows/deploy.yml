@@ -17,19 +17,16 @@ jobs:
         uses: actions/checkout@v4
 
       # ----------------------------------------
-      # 2. Set up Java Development Kit (JDK) 21
+      # 2. Set up Docker environment
       # ----------------------------------------
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'            # Specify Java version
-          distribution: 'temurin'       # Use Temurin distribution (recommended)
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
       # ----------------------------------------
-      # 3. Build the Spring Boot application using Maven
+      # 3. Build the Docker image
       # ----------------------------------------
-      - name: Build with Maven
-        run: mvn clean package -DskipTests    # Clean and package the application without running tests
+      - name: Build Docker image
+        run: docker build -t camping-service-repo .
 
       # ----------------------------------------
       # 4. Check AWS CLI version
@@ -51,11 +48,13 @@ jobs:
           aws-region: ap-northeast-1           # Change to your AWS region
 
       # ----------------------------------------
-      # 6. Upload the built JAR file to S3 bucket
+      # 6. Push the Docker image to Amazon ECR
       # ----------------------------------------
-      - name: Upload JAR to S3
+      - name: Push Docker image to ECR
         run: |
-          aws s3 cp target/user-service-0.0.1-SNAPSHOT.jar s3://my-camping-bucket/user-service-0.0.1-SNAPSHOT.jar
+          aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com
+          docker tag camping-service-repo 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-service-repo:latest
+          docker push 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-service-repo:latest
 
       # ----------------------------------------
       # 7. Create the private key file for SSH
@@ -65,35 +64,22 @@ jobs:
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
           chmod 600 key.pem    # Restrict permissions for security
-          
-
-      - name: kill java app
-        run:
-          PIDS=$(pgrep -f user-service-0.0.1-SNAPSHOT.jar)
-
-#          if [ ! -z "$PIDS" ]; then
-#            echo "Java server is running. Shutting it down..."
-#            sudo /usr/bin/kill -9 $PIDS
-#          else
-#            echo "Java server is not running."
-#          fi
+      
 
       # ----------------------------------------
-      # 8. SSH into the EC2 instance and deploy the app:
-      #    - download the JAR from S3
-      #    - stop any running app process
-      #    - Check if app.pid exists
-      #    - start the new app version in background
+      # 8. SSH into the EC2 instance and deploy the Docker container:
+      #    - Pull the Docker image from ECR
+      #    - Stop any running container
+      #    - Start the new container version
       # ----------------------------------------
-      - name: Deploy to EC2
+      - name: Deploy Docker to EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 '
             set -x
-            aws s3 cp s3://my-camping-bucket/user-service-0.0.1-SNAPSHOT.jar /home/ec2-user/user-service-0.0.1-SNAPSHOT.jar
-
-
-          
-            nohup java -jar /home/ec2-user/user-service-0.0.1-SNAPSHOT.jar > /home/ec2-user/output.log 2>&1 &
+            docker pull 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-service-repo:latest
+            docker stop camping-service-repo || true
+            docker rm camping-service-repo || true
+            docker run -d --name camping-service-repo -p 8080:8080 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-service-repo:latest
           '
 
       # ----------------------------------------
