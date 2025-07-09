@@ -26,7 +26,7 @@ jobs:
       # 3. Build the Docker image
       # ----------------------------------------
       - name: Build Docker image
-        run: docker build -t user-service .
+        run: docker build --platform linux/amd64 -t user-service .
 
       # ----------------------------------------
       # 4. Check AWS CLI version
@@ -86,10 +86,10 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 '
             set -x  # Enable shell debugging for better visibility
-            sudo docker pull 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
-            sudo docker stop user-service || true
-            sudo docker rm user-service || true
-            sudo docker run -d --name user-service -p 8080:8080 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
+            docker pull 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
+            docker stop user-service || true
+            docker rm user-service || true
+            docker run -d --name user-service -p 8080:8080 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
           '
 
       # ----------------------------------------
