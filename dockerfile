@@ -1,14 +1,42 @@
-# 使用 OpenJDK 21 作為基礎映像
-FROM eclipse-temurin:21-jdk-jammy
+# ----------------------------
+# Stage 1 - Build with Maven
+# ----------------------------
 
-# 設定容器內的工作目錄
+# Use Maven with OpenJDK 21 as the build image
+FROM eclipse-temurin:21-jdk-jammy as builder
+
+# Set the working directory
 WORKDIR /app
 
-# 複製本地已經 build 好的 JAR 檔案
-COPY target/user-service-0.0.1-SNAPSHOT.jar app.jar
+# Copy Maven build files first (to leverage Docker cache)
+COPY pom.xml .
+COPY mvnw .
+COPY .mvn .mvn
 
-# 開放 Spring Boot 預設的 8080 port
+# Download dependencies (this helps with build caching)
+RUN ./mvnw dependency:go-offline
+
+# Copy the rest of the source code
+COPY src ./src
+
+# Build the application
+RUN ./mvnw clean package -DskipTests
+
+# -------------------------------
+# Stage 2 - Run Spring Boot app
+# -------------------------------
+
+# Use a smaller JDK runtime image
+FROM gcr.io/distroless/java21
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the JAR from the build stage
+COPY --from=builder /app/target/user-service-0.0.1-SNAPSHOT.jar app.jar
+
+# Expose the default Spring Boot port
 EXPOSE 8080
 
-# 啟動 Spring Boot 應用
+# Run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "app.jar"]
