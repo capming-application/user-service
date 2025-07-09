@@ -66,15 +66,15 @@ jobs:
       # ----------------------------------------
       # 8. Install Docker on EC2 instance
       # ----------------------------------------
-      - name: Install Docker on EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 '
-            sudo yum update -y
-            sudo amazon-linux-extras install docker -y
-            sudo service docker start
-            sudo usermod -aG docker ec2-user
-            docker --version
-          '
+#      - name: Install Docker on EC2
+#        run: |
+#          ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 '
+#            sudo yum update -y
+#            sudo amazon-linux-extras install docker -y
+#            sudo service docker start
+#            sudo usermod -aG docker ec2-user
+#            docker --version
+#          '
 
       # ----------------------------------------
       # 9. SSH into the EC2 instance and deploy the Docker container:
