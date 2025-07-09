@@ -19,7 +19,7 @@ jobs:
       # ----------------------------------------
       # 2. Set up Docker environment
       # ----------------------------------------
-      - name: Set up Docker
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       # ----------------------------------------
@@ -30,9 +30,7 @@ jobs:
 
       # ----------------------------------------
       # 4. Check AWS CLI version
-      #    (needed for aws s3 cp commands)
       # ----------------------------------------
-
       - name: Check AWS CLI version
         run: aws --version
 
@@ -64,10 +62,22 @@ jobs:
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
           chmod 600 key.pem    # Restrict permissions for security
-      
 
       # ----------------------------------------
-      # 8. SSH into the EC2 instance and deploy the Docker container:
+      # 8. Install Docker on EC2 instance
+      # ----------------------------------------
+      - name: Install Docker on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 '
+            sudo yum update -y
+            sudo amazon-linux-extras install docker -y
+            sudo service docker start
+            sudo usermod -aG docker ec2-user
+            docker --version
+          '
+
+      # ----------------------------------------
+      # 9. SSH into the EC2 instance and deploy the Docker container:
       #    - Pull the Docker image from ECR
       #    - Stop any running container
       #    - Start the new container version
@@ -75,16 +85,16 @@ jobs:
       - name: Deploy Docker to EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 '
-            set -x
-            docker pull 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
-            docker stop user-service || true
-            docker rm user-service || true
-            docker run -d --name user-service -p 8080:8080 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
+            set -x  # Enable shell debugging for better visibility
+            sudo docker pull 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
+            sudo docker stop user-service || true
+            sudo docker rm user-service || true
+            sudo docker run -d --name user-service -p 8080:8080 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
           '
 
       # ----------------------------------------
-      # 9. Delete the SSH key file after deployment
-      #    (important for security)
+      # 10. Delete the SSH key file after deployment
+      #     (important for security)
       # ----------------------------------------
       - name: Clean up SSH key
         run: rm -f key.pem
