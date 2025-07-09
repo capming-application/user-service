@@ -29,13 +29,7 @@ jobs:
         run: docker build --platform linux/amd64 -t user-service .
 
       # ----------------------------------------
-      # 4. Check AWS CLI version
-      # ----------------------------------------
-      - name: Check AWS CLI version
-        run: aws --version
-
-      # ----------------------------------------
-      # 5. Configure AWS credentials for the runner
+      # 4. Configure AWS credentials for the runner
       #    (provides environment variables for AWS CLI)
       # ----------------------------------------
       - name: Configure AWS credentials
@@ -46,7 +40,7 @@ jobs:
           aws-region: ap-northeast-1           # Change to your AWS region
 
       # ----------------------------------------
-      # 6. Push the Docker image to Amazon ECR
+      # 5. Push the Docker image to Amazon ECR
       # ----------------------------------------
       - name: Push Docker image to ECR
         run: |
@@ -55,7 +49,7 @@ jobs:
           docker push 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
 
       # ----------------------------------------
-      # 7. Create the private key file for SSH
+      # 6. Create the private key file for SSH
       #    (the key should be stored in a GitHub secret)
       # ----------------------------------------
       - name: Create SSH key file
@@ -64,20 +58,7 @@ jobs:
           chmod 600 key.pem    # Restrict permissions for security
 
       # ----------------------------------------
-      # 8. Install Docker on EC2 instance
-      # ----------------------------------------
-#      - name: Install Docker on EC2
-#        run: |
-#          ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 '
-#            sudo yum update -y
-#            sudo amazon-linux-extras install docker -y
-#            sudo service docker start
-#            sudo usermod -aG docker ec2-user
-#            docker --version
-#          '
-
-      # ----------------------------------------
-      # 9. SSH into the EC2 instance and deploy the Docker container:
+      # 7. SSH into the EC2 instance and deploy the Docker container:
       #    - Pull the Docker image from ECR
       #    - Stop any running container
       #    - Start the new container version
@@ -93,7 +74,7 @@ jobs:
           '
 
       # ----------------------------------------
-      # 10. Delete the SSH key file after deployment
+      # 8. Delete the SSH key file after deployment
       #     (important for security)
       # ----------------------------------------
       - name: Clean up SSH key
