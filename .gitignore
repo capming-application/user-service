@@ -39,3 +39,4 @@ build/
 
 src/main/resources/application-local.properties
 .env
+my-key-pair.pem

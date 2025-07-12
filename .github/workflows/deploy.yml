@@ -64,14 +64,23 @@ jobs:
       #    - Start the new container version
       # ----------------------------------------
       - name: Deploy Docker to EC2
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 '
-            set -x  # Enable shell debugging for better visibility
-            docker pull 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
+          ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 "
+            set -x
             docker stop user-service || true
             docker rm user-service || true
-            docker run -d --name user-service -p 8080:8080 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
-          '
+            docker rmi -f 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest || true
+            docker pull 319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
+            docker run -d \
+              --name user-service \
+              -p 8080:8080 \
+              -e GOOGLE_CLIENT_ID='${GOOGLE_CLIENT_ID}' \
+              -e GOOGLE_CLIENT_SECRET='${GOOGLE_CLIENT_SECRET}' \
+              319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
+          "
 
       # ----------------------------------------
       # 8. Delete the SSH key file after deployment
@@ -79,11 +88,3 @@ jobs:
       # ----------------------------------------
       - name: Clean up SSH key
         run: rm -f key.pem
-
-      # ----------------------------------------
-      # 9. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET for Spring Boot application
-      # ----------------------------------------
-      - name: Set Google Client credentials
-        run: |
-          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> $GITHUB_ENV
