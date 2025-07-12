@@ -79,3 +79,11 @@ jobs:
       # ----------------------------------------
       - name: Clean up SSH key
         run: rm -f key.pem
+
+      # ----------------------------------------
+      # 9. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET for Spring Boot application
+      # ----------------------------------------
+      - name: Set Google Client credentials
+        run: |
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> $GITHUB_ENV

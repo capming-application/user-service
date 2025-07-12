@@ -36,3 +36,6 @@ build/
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+src/main/resources/application-local.properties
+.env
