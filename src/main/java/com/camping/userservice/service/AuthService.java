@@ -1,25 +1,25 @@
-package com.camping.userservice.controller;
+package com.camping.userservice.service;
 
+import com.camping.userservice.dto.TokenDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-@Controller
-public class ViewController {
+@Service
+public class AuthService {
 
     @Autowired
     private OAuth2AuthorizedClientService authorizedClientService;
 
-    @GetMapping("/profile")
-    public String profile(OAuth2AuthenticationToken token, Model model, Authentication authentication) {
+    public TokenDto getToken(OAuth2AuthenticationToken token, Model model) {
         model.addAttribute("name", token.getPrincipal().getAttribute("name"));
         model.addAttribute("email", token.getPrincipal().getAttribute("email"));
         model.addAttribute("photo", token.getPrincipal().getAttribute("picture"));
@@ -28,25 +28,21 @@ public class ViewController {
         String principalName = token.getName();
 
         OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(registrationId, principalName);
+        String accessTokenValue = null;
+        String refreshTokenValue = null;
+        LocalDateTime accessTokenExpiresAt = null;
+
         if (authorizedClient != null) {
             OAuth2AccessToken accessToken = authorizedClient.getAccessToken();
-            if (accessToken != null) {
-                System.out.println(accessToken.getTokenValue());
-                System.out.println(accessToken.getScopes());
-                System.out.println(accessToken.getTokenType());
-                System.out.println(accessToken.getExpiresAt().atZone(ZoneId.of("Asia/Taipei")));
-                System.out.println(accessToken.getClass());
-                System.out.println(accessToken.getScopes());
-                System.out.println(authorizedClient.getRefreshToken().getTokenValue());
+            OAuth2RefreshToken refreshToken = authorizedClient.getRefreshToken();
 
+            if (accessToken != null && refreshToken != null && accessToken.getExpiresAt() != null) {
+                accessTokenValue = accessToken.getTokenValue();
+                refreshTokenValue = refreshToken.getTokenValue();
+                accessTokenExpiresAt = accessToken.getExpiresAt().atZone(ZoneId.of("Asia/Taipei")).toLocalDateTime();
             }
         }
 
-        return "user-profile";
-    }
-
-    @GetMapping("/login")
-    public String login() {
-        return "custom_login";
+        return new TokenDto(accessTokenValue, refreshTokenValue, accessTokenExpiresAt);
     }
 }
