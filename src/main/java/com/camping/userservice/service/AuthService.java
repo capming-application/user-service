@@ -41,11 +41,14 @@ public class AuthService {
             OAuth2RefreshToken refreshToken = authorizedClient.getRefreshToken();
             System.out.println("accessToken = " + accessToken);
             System.out.println("refreshToken = " + refreshToken);
-            if (accessToken != null && refreshToken != null && accessToken.getExpiresAt() != null) {
+            if (accessToken != null && accessToken.getExpiresAt() != null) {
                 accessTokenValue = accessToken.getTokenValue();
-                refreshTokenValue = refreshToken.getTokenValue();
                 accessTokenExpiresAt = accessToken.getExpiresAt().atZone(ZoneId.of("Asia/Taipei")).toLocalDateTime();
             }
+            if (refreshToken != null) {
+                refreshTokenValue = refreshToken.getTokenValue();
+            }
+
         }
 
         return new TokenDto(accessTokenValue, refreshTokenValue, accessTokenExpiresAt);
