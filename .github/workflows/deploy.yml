@@ -68,7 +68,17 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 "
+          echo "GOOGLE_CLIENT_ID prefix: ${GOOGLE_CLIENT_ID:0:4}"
+          echo "GOOGLE_CLIENT_SECRET prefix: ${GOOGLE_CLIENT_SECRET:0:4}"
+        
+          ssh -o StrictHostKeyChecking=no -i key.pem ec2-user@13.231.23.72 << EOF
+            export GOOGLE_CLIENT_ID='${GOOGLE_CLIENT_ID}'
+            export GOOGLE_CLIENT_SECRET='${GOOGLE_CLIENT_SECRET}'
+        
+            echo 'Inside SSH session...'
+            echo GOOGLE_CLIENT_ID prefix: \${GOOGLE_CLIENT_ID:0:4}
+            echo GOOGLE_CLIENT_SECRET prefix: \${GOOGLE_CLIENT_SECRET:0:4}
+        
             set -x
             docker stop user-service || true
             docker rm user-service || true
@@ -77,10 +87,10 @@ jobs:
             docker run -d \
               --name user-service \
               -p 8080:8080 \
-              -e GOOGLE_CLIENT_ID='${GOOGLE_CLIENT_ID}' \
-              -e GOOGLE_CLIENT_SECRET='${GOOGLE_CLIENT_SECRET}' \
+              -e GOOGLE_CLIENT_ID=\${GOOGLE_CLIENT_ID} \
+              -e GOOGLE_CLIENT_SECRET=\${GOOGLE_CLIENT_SECRET} \
               319805118398.dkr.ecr.ap-northeast-1.amazonaws.com/camping-user-repo:latest
-          "
+          EOF
 
       # ----------------------------------------
       # 8. Delete the SSH key file after deployment
