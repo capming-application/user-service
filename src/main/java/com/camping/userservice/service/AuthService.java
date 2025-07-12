@@ -32,6 +32,10 @@ public class AuthService {
         String refreshTokenValue = null;
         LocalDateTime accessTokenExpiresAt = null;
 
+        System.out.println("registrationId = " + registrationId);
+        System.out.println("principalName = " + principalName);
+        System.out.println("authorizedClient = " + authorizedClient);
+
         if (authorizedClient != null) {
             OAuth2AccessToken accessToken = authorizedClient.getAccessToken();
             OAuth2RefreshToken refreshToken = authorizedClient.getRefreshToken();
