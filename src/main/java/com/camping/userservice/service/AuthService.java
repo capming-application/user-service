@@ -39,7 +39,8 @@ public class AuthService {
         if (authorizedClient != null) {
             OAuth2AccessToken accessToken = authorizedClient.getAccessToken();
             OAuth2RefreshToken refreshToken = authorizedClient.getRefreshToken();
-
+            System.out.println("accessToken = " + accessToken);
+            System.out.println("refreshToken = " + refreshToken);
             if (accessToken != null && refreshToken != null && accessToken.getExpiresAt() != null) {
                 accessTokenValue = accessToken.getTokenValue();
                 refreshTokenValue = refreshToken.getTokenValue();
