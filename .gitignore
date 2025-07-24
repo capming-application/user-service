@@ -37,6 +37,6 @@ build/
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 
-src/main/resources/application-local.properties
+src/main/resources/application-local.yml
 .env
 my-key-pair.pem

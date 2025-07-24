@@ -1,0 +1,4 @@
+dn: ou=users,dc=camping,dc=com
+objectClass: top
+objectClass: organizationalUnit
+ou: users

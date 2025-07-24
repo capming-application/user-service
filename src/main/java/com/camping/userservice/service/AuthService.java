@@ -1,56 +1,56 @@
 package com.camping.userservice.service;
 
-import com.camping.userservice.dto.TokenDto;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import com.camping.userservice.dto.LoginRsDto;
+import com.camping.userservice.dto.RegisterRqDto;
+import com.camping.userservice.entity.Users;
+import com.camping.userservice.repository.UsersRepository;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.util.Date;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
-    @Autowired
-    private OAuth2AuthorizedClientService authorizedClientService;
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+    private final JwtService jwtService;
+    private final UsersRepository usersRepository;
 
-    public TokenDto getToken(OAuth2AuthenticationToken token, Model model) {
-        model.addAttribute("name", token.getPrincipal().getAttribute("name"));
-        model.addAttribute("email", token.getPrincipal().getAttribute("email"));
-        model.addAttribute("photo", token.getPrincipal().getAttribute("picture"));
+    public LoginRsDto loginWithOAuth2(OAuth2AuthenticationToken token) {
+        String email = token.getPrincipal().getAttribute("email");
+        String name = token.getPrincipal().getAttribute("name");
+        Date accessTokenExpiresAt = new Date(System.currentTimeMillis() + 5 * 60 * 1000);
+        String accessToken = jwtService.createAccessToken(name);
+        String refreshToken = jwtService.createRefreshToken();
+        this.jwtService.saveRefreshToken(email, refreshToken);
 
-        String registrationId = token.getAuthorizedClientRegistrationId();
-        String principalName = token.getName();
-
-        OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(registrationId, principalName);
-        String accessTokenValue = null;
-        String refreshTokenValue = null;
-        LocalDateTime accessTokenExpiresAt = null;
-
-        System.out.println("registrationId = " + registrationId);
-        System.out.println("principalName = " + principalName);
-        System.out.println("authorizedClient = " + authorizedClient);
-
-        if (authorizedClient != null) {
-            OAuth2AccessToken accessToken = authorizedClient.getAccessToken();
-            OAuth2RefreshToken refreshToken = authorizedClient.getRefreshToken();
-            System.out.println("accessToken = " + accessToken);
-            System.out.println("refreshToken = " + refreshToken);
-            if (accessToken != null && accessToken.getExpiresAt() != null) {
-                accessTokenValue = accessToken.getTokenValue();
-                accessTokenExpiresAt = accessToken.getExpiresAt().atZone(ZoneId.of("Asia/Taipei")).toLocalDateTime();
-            }
-            if (refreshToken != null) {
-                refreshTokenValue = refreshToken.getTokenValue();
-            }
-
+        Users savedUser = new Users();
+        Optional<Users> usersOptional = this.usersRepository.findByEmail(email);
+        if (usersOptional.isPresent()) {
+            log.info("User already exists: {}", usersOptional.get().getEmail());
+        } else {
+            RegisterRqDto dto = new RegisterRqDto(email, name, null);
+            savedUser = this.register(dto);
         }
 
-        return new TokenDto(accessTokenValue, refreshTokenValue, accessTokenExpiresAt);
+        return new LoginRsDto(savedUser.getEmail(), savedUser.getUsername(), accessToken, refreshToken, accessTokenExpiresAt);
+    }
+
+    public LoginRsDto loginWithGeneral() {
+        return null;
+    }
+
+    public Users register(RegisterRqDto registerRqDto) {
+        Users user = new Users();
+        user.setEmail(registerRqDto.email());
+        user.setUsername(registerRqDto.username());
+        user.setPasswordHash(registerRqDto.password());
+        return this.usersRepository.save(user);
     }
 }

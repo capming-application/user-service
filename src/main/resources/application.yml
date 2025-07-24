@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: user-service  # Application name used for logging, discovery, tracing, etc.
+
+  datasource:
+    url: jdbc:postgresql://aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres  # PostgreSQL database URL
+    username: postgres.adqbsxwkfhiruwtuqesq  # PostgreSQL username
+    password: AVc0hfTPZQpM9dAQ  # PostgreSQL password
+    driver-class-name: org.postgresql.Driver  # PostgreSQL JDBC driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # Auto-update schema (use with caution in production)
+    show-sql: true  # Show SQL statements in logs
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect  # PostgreSQL dialect for Hibernate
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}  # Google OAuth2 Client ID (injected from env or config)
+            client-secret: ${GOOGLE_CLIENT_SECRET}  # Google OAuth2 Client Secret
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs  # JWT public keys for verifying Google tokens
+
+server:
+  address: 0.0.0.0  # Bind server to all network interfaces
+  port: 8080  # Application running port
+  servlet:
+    session:
+      persistent: true  # Persist session across restarts (if applicable)
+
+logging:
+  level:
+    org.springframework.security: DEBUG  # Enable debug logs for Spring Security
