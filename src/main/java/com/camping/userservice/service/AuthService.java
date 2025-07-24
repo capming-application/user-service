@@ -29,16 +29,17 @@ public class AuthService {
         String refreshToken = jwtService.createRefreshToken();
         this.jwtService.saveRefreshToken(email, refreshToken);
 
-        Users savedUser = new Users();
         Optional<Users> usersOptional = this.usersRepository.findByEmail(email);
         if (usersOptional.isPresent()) {
             log.info("User already exists: {}", usersOptional.get().getEmail());
         } else {
             RegisterRqDto dto = new RegisterRqDto(email, name, null);
-            savedUser = this.register(dto);
+            Users savedUser = this.register(dto);
+            email = savedUser.getEmail();
+            name = savedUser.getUsername();
         }
 
-        return new LoginRsDto(savedUser.getEmail(), savedUser.getUsername(), accessToken, refreshToken, accessTokenExpiresAt);
+        return new LoginRsDto(email, name, accessToken, refreshToken, accessTokenExpiresAt);
     }
 
     public LoginRsDto loginWithGeneral() {
